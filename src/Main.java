@@ -8,7 +8,7 @@ public class Main
 	private static final String ERROR_FILE_DATA = "ERROR";
 	static public void main(String argv[])
 	{
-		Lexer l;
+		Lexer l = null;
 		Parser p;
 		Symbol s;
 		AstStmtList ast;
