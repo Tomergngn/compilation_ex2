@@ -56,11 +56,14 @@ import java_cup.runtime.*;
 	/*********************************************************************************/
 	private Symbol symbol(int type)               {return new Symbol(type, yyline, yycolumn);}
 	private Symbol symbol(int type, Object value) {return new Symbol(type, yyline, yycolumn, value);}
+	private static final int MAX_INTEGER_VALUE = 32767;
+	private static final int MIN_INTEGER_VALUE = -32767;
 
 	/*******************************************/
 	/* Enable line number extraction from main */
 	/*******************************************/
-	public int getLine()    { return yyline + 1; }
+	public int getLine() { return yyline + 1; }
+	public int getColumn() { return yycolumn + 1; }
 
 	/**********************************************/
 	/* Enable token position extraction from main */
@@ -71,10 +74,17 @@ import java_cup.runtime.*;
 /***********************/
 /* MACRO DECLARATIONS */
 /***********************/
-LineTerminator	= \r|\n|\r\n
-WhiteSpace		= {LineTerminator} | [ \t\f]
-INTEGER			= 0 | [1-9][0-9]*
-ID				= [a-zA-Z]+
+LineTerminator	        = \r|\n|\r\n
+WhiteSpace		        = {LineTerminator} | [ \t]
+INTEGER			        = 0|([1-9][0-9]*)
+INVALID_INTEGER         = 0[0-9a-zA-Z]+
+ID				        = [a-zA-Z][a-zA-Z0-9]*
+STRING			        = \"[a-zA-Z]*\"
+INVALID_STRING	        = \".*
+COMMENT_ALLOWED_CHAR    = [a-zA-Z0-9 \(\)\[\]\{\}\?\!\+\-\*\/\.;]
+COMMENT_TYPE_1          = \/\/{COMMENT_ALLOWED_CHAR}*
+COMMENT_TYPE_2          = \/\*{COMMENT_ALLOWED_CHAR}*\*\/
+INVALID_COMMENT         = ((\/\*) | (\/\/)).*
    
 /******************************/
 /* DOLLAR DOLLAR - DON'T TOUCH! */
@@ -93,7 +103,9 @@ ID				= [a-zA-Z]+
 /**************************************************************/
 
 <YYINITIAL> {
-
+{COMMENT_TYPE_1}    { /* Skip */ }
+{COMMENT_TYPE_2}    { /* Skip */ }
+{INVALID_COMMENT}   { throw new Error("Invalid comment: " + yytext()); }
 "if"				{ return symbol(TokenNames.IF);}
 "="					{ return symbol(TokenNames.EQ);}
 "."					{ return symbol(TokenNames.DOT);}
@@ -108,10 +120,41 @@ ID				= [a-zA-Z]+
 "]"					{ return symbol(TokenNames.RBRACK);}
 "{"					{ return symbol(TokenNames.LBRACE);}
 "}"					{ return symbol(TokenNames.RBRACE);}
+","					{ return symbol(TokenNames.COMMA);}
+"."					{ return symbol(TokenNames.DOT);}
 ";"					{ return symbol(TokenNames.SEMICOLON);}
-{ID}				{ return symbol(TokenNames.ID, yytext());}
-{INTEGER}			{ return symbol(TokenNames.INT, Integer.valueOf(yytext()));}
 {WhiteSpace}		{ /* just skip what was found, do nothing */ }
 {LineTerminator}	{ /* just skip what was found, do nothing */ }
 <<EOF>>				{ return symbol(TokenNames.EOF);}
+"int"				{ return symbol(TokenNames.TYPE_INT);}
+"string"			{ return symbol(TokenNames.TYPE_STRING);}
+"void"				{ return symbol(TokenNames.TYPE_VOID);}
+":="				{ return symbol(TokenNames.ASSIGN);}
+"="				    { return symbol(TokenNames.EQ);}
+"<"				    { return symbol(TokenNames.LT);}
+">"				    { return symbol(TokenNames.GT);}
+"array"			    { return symbol(TokenNames.ARRAY);}
+"class"			    { return symbol(TokenNames.CLASS);}
+"return"		    { return symbol(TokenNames.RETURN);}
+"while"		        { return symbol(TokenNames.WHILE);}
+"if"		        { return symbol(TokenNames.IF);}
+"else"		        { return symbol(TokenNames.ELSE);}
+"new"		        { return symbol(TokenNames.NEW);}
+"extends"	        { return symbol(TokenNames.EXTENDS);}
+"nil"	            { return symbol(TokenNames.NIL);}
+{INVALID_INTEGER}   { throw new Error("Invalid integer: " + yytext());}
+{INTEGER}			{
+                        Integer value = Integer.valueOf(yytext());
+                        if (value > MAX_INTEGER_VALUE || value < MIN_INTEGER_VALUE)
+                        {
+                            throw new Error("Integer out of bounds: " + yytext());
+                        }
+                        return symbol(TokenNames.INT, Integer.valueOf(yytext()));
+                    }
+{STRING}			{
+                        String text = yytext();
+                        return symbol(TokenNames.STRING, String.valueOf(text).substring(1,text.length()-1));
+                    }
+{INVALID_STRING}    { throw new Error("Invalid String: " + yytext());}
+{ID}				{ return symbol(TokenNames.ID, yytext());}
 }
