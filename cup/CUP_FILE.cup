@@ -152,7 +152,6 @@ type		::=		TYPE_INT					{: RESULT = null; :}
 					| TYPE_VOID					{: RESULT = null; :}
 					| ID:className				{: RESULT = null; :}
 					| TYPE_INT LBRACK RBRACK	{: RESULT = null; /* int[] */ :}
-					| ID:typeName LBRACK RBRACK	{: RESULT = null; /* custom type array */ :}
 					;
 
 paramList	::=		param:p COMMA paramList:pl	{: RESULT = null; :}
