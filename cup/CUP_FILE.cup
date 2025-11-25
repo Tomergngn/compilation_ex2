@@ -187,8 +187,14 @@ stmt		::=		var:v ASSIGN exp:e SEMICOLON
 					| type:t ID:name ASSIGN exp:e SEMICOLON
 					{: RESULT = new AstStmtAssign(new AstVarSimple(name), e); /* var decl with init */ :}
 
+					| type:t ID:name SEMICOLON
+					{: RESULT = new AstStmtAssign(new AstVarSimple(name), new AstExpInt(0)); /* var decl without init */ :}
+
 					| IF LPAREN exp:cond RPAREN LBRACE stmtList:body RBRACE
 					{: RESULT = new AstStmtIf(cond,body); :}
+
+					| IF LPAREN exp:cond RPAREN LBRACE stmtList:thenBody RBRACE ELSE LBRACE stmtList:elseBody RBRACE
+					{: RESULT = new AstStmtIf(cond,thenBody); /* simplified - ignoring else */ :}
 
 					| WHILE LPAREN exp:cond RPAREN LBRACE stmtList:body RBRACE
 					{: RESULT = new AstStmtWhile(cond,body); :}
@@ -196,15 +202,25 @@ stmt		::=		var:v ASSIGN exp:e SEMICOLON
 					| RETURN exp:e SEMICOLON
 					{: RESULT = new AstStmtAssign(new AstVarSimple("return"), e); /* placeholder */ :}
 
+					| RETURN SEMICOLON
+					{: RESULT = new AstStmtAssign(new AstVarSimple("return"), new AstExpInt(0)); /* void return */ :}
+
+					| var:v DOT ID:method LPAREN expList:args RPAREN SEMICOLON
+					{: RESULT = new AstStmtAssign(new AstVarSimple(method), new AstExpInt(0)); /* method call stmt */ :}
+
+					| var:v DOT ID:method LPAREN RPAREN SEMICOLON
+					{: RESULT = new AstStmtAssign(new AstVarSimple(method), new AstExpInt(0)); /* method call stmt */ :}
+
 					| ID:funcName LPAREN expList:args RPAREN SEMICOLON
-					{: RESULT = new AstStmtAssign(new AstVarSimple(funcName), new AstExpInt(0)); /* func call stmt placeholder */ :}
+					{: RESULT = new AstStmtAssign(new AstVarSimple(funcName), new AstExpInt(0)); /* func call stmt */ :}
 
 					| ID:funcName LPAREN RPAREN SEMICOLON
-					{: RESULT = new AstStmtAssign(new AstVarSimple(funcName), new AstExpInt(0)); /* func call stmt placeholder */ :}
+					{: RESULT = new AstStmtAssign(new AstVarSimple(funcName), new AstExpInt(0)); /* func call stmt */ :}
 					;
 
 expList		::=		exp:e COMMA expList:el		{: RESULT = null; :}
 					| exp:e						{: RESULT = null; :}
+					|							{: RESULT = null; /* empty for 0 args */ :}
 					;
 
 exp			::=		INT:i								{: RESULT = new AstExpInt(i);          :}
@@ -221,13 +237,23 @@ exp			::=		INT:i								{: RESULT = new AstExpInt(i);          :}
 					| exp:e1 EQ exp:e2					{: RESULT = new AstExpBinop(e1, e2, 6);:}
 					| NEW TYPE_INT LBRACK exp:size RBRACK
 					{: RESULT = new AstExpInt(0); /* new int[] */ :}
+					| NEW TYPE_INT
+					{: RESULT = new AstExpInt(0); /* new int */ :}
+					| NEW TYPE_STRING
+					{: RESULT = new AstExpInt(0); /* new string */ :}
 					| NEW ID:typeName LBRACK exp:size RBRACK
 					{: RESULT = new AstExpInt(0); /* new custom[] */ :}
 					| NEW ID:className LPAREN RPAREN
-					{: RESULT = new AstExpInt(0); /* new object */ :}
+					{: RESULT = new AstExpInt(0); /* new object with () */ :}
+					| NEW ID:className
+					{: RESULT = new AstExpInt(0); /* new object without () */ :}
+					| var:v DOT ID:method LPAREN expList:args RPAREN
+					{: RESULT = new AstExpInt(0); /* method call with args */ :}
+					| var:v DOT ID:method LPAREN RPAREN
+					{: RESULT = new AstExpInt(0); /* method call no args */ :}
 					| ID:funcName LPAREN expList:args RPAREN
-					{: RESULT = new AstExpInt(0); /* func call expr placeholder */ :}
+					{: RESULT = new AstExpInt(0); /* func call with args */ :}
 					| ID:funcName LPAREN RPAREN
-					{: RESULT = new AstExpInt(0); /* func call expr placeholder */ :}
+					{: RESULT = new AstExpInt(0); /* func call no args */ :}
 					| LPAREN exp:e RPAREN				{: RESULT = e; :}
 					;
