@@ -1,71 +1,74 @@
 import java.io.*;
+import java.io.PrintWriter;
 import java_cup.runtime.Symbol;
+import ast.*;
 
 public class Main
 {
-    public static void main(String argv[])
-    {
-        Lexer l = null;
-        Parser p;
-        FileReader fileReader;
-        PrintWriter fileWriter = null;
-        String inputFileName = argv[0];
-        String outputFileName = argv[1];
+	private static final String ERROR_FILE_DATA = "ERROR";
+	static public void main(String argv[])
+	{
+		Lexer l;
+		Parser p;
+		Symbol s;
+		AstStmtList ast;
+		FileReader fileReader;
+		PrintWriter fileWriter = null;
+		String inputFileName = argv[0];
+		String outputFileName = argv[1];
+		
+		try
+		{
+			fileReader = new FileReader(inputFileName);
+			fileWriter = new PrintWriter(outputFileName);
+			
+			l = new Lexer(fileReader);
+			
+			p = new Parser(l);
 
-        try
-        {
-            fileReader = new FileReader(inputFileName);
-            fileWriter = new PrintWriter(outputFileName);
-
-            l = new Lexer(fileReader);
-            p = new Parser(l);
-
-            // Parse the input
-            p.parse();
-
-            // If we get here, parsing succeeded
-            fileWriter.print("OK");
-            fileWriter.close();
-        }
+			/***********************************/
+			/* [5] 3 ... 2 ... 1 ... Parse !!! */
+			/***********************************/
+			ast = (AstStmtList) p.parse().value;
+			
+			/*************************/
+			/* [6] Print the AST ... */
+			/*************************/
+			ast.printMe();
+			
+			/*************************/
+			/* [7] Close output file */
+			/*************************/
+			fileWriter.close();
+			
+			/*************************************/
+			/* [8] Finalize AST GRAPHIZ DOT file */
+			/*************************************/
+			AstGraphviz.getInstance().finalizeFile();
+    	}
         catch (Error e)
         {
-            // Lexical or syntax error occurred
+
             if (fileWriter != null) {
                 try {
                     fileWriter.close();
                 } catch (Exception ex) {
-                    // Ignore
+                    System.err.println("Error closing file writer");
                 }
             }
             try {
                 fileWriter = new PrintWriter(outputFileName);
-                int errorLine = l != null ? l.getLine() : 1;
-                fileWriter.print("ERROR(" + errorLine + ")");
+                fileWriter.println(ERROR_FILE_DATA);
+
                 fileWriter.close();
             } catch (Exception ex) {
-                System.err.println("An exception occurred while writing error to output file:");
+                System.err.println("An exception has occured while trying to set ERROR in output file:");
                 ex.printStackTrace();
             }
+            e.printStackTrace();
         }
-        catch (Exception e)
-        {
-            // Parsing exception
-            if (fileWriter != null) {
-                try {
-                    fileWriter.close();
-                } catch (Exception ex) {
-                    // Ignore
-                }
-            }
-            try {
-                fileWriter = new PrintWriter(outputFileName);
-                int errorLine = l != null ? l.getLine() : 1;
-                fileWriter.print("ERROR(" + errorLine + ")");
-                fileWriter.close();
-            } catch (Exception ex) {
-                System.err.println("An exception occurred while writing error to output file:");
-                ex.printStackTrace();
-            }
-        }
-    }
-}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
