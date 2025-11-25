@@ -92,6 +92,8 @@ non terminal AstNode declList;
 non terminal AstNode funcDecl;
 non terminal AstNode arrayTypeDecl;
 non terminal AstNode classDecl;
+non terminal AstNode fieldDecl;
+non terminal AstNode fieldDeclList;
 non terminal AstNode type;
 non terminal AstNode paramList;
 non terminal AstNode param;
@@ -136,10 +138,19 @@ arrayTypeDecl ::= ARRAY ID:typeName EQ TYPE_INT LBRACK RBRACK SEMICOLON
 					{: RESULT = null; /* array type alias custom[] */ :}
 					;
 
-classDecl	::=		CLASS ID:className LBRACE stmtList:body RBRACE
+classDecl	::=		CLASS ID:className LBRACE fieldDeclList:fields RBRACE
 					{: RESULT = null; /* simplified */ :}
-					| CLASS ID:className EXTENDS ID:parentName LBRACE stmtList:body RBRACE
+					| CLASS ID:className EXTENDS ID:parentName LBRACE fieldDeclList:fields RBRACE
 					{: RESULT = null; /* simplified */ :}
+					;
+
+fieldDeclList ::=	fieldDecl:fd fieldDeclList:fdl	{: RESULT = null; :}
+					| fieldDecl:fd					{: RESULT = null; :}
+					|								{: RESULT = null; /* empty */ :}
+					;
+
+fieldDecl	::=		type:t ID:name SEMICOLON		{: RESULT = null; /* field */ :}
+					| funcDecl:fd					{: RESULT = null; /* method */ :}
 					;
 
 funcDecl	::=		type:t ID:name LPAREN paramList:pl RPAREN LBRACE stmtList:body RBRACE
