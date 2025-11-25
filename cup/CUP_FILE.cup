@@ -220,7 +220,6 @@ stmt		::=		var:v ASSIGN exp:e SEMICOLON
 
 expList		::=		exp:e COMMA expList:el		{: RESULT = null; :}
 					| exp:e						{: RESULT = null; :}
-					|							{: RESULT = null; /* empty for 0 args */ :}
 					;
 
 exp			::=		INT:i								{: RESULT = new AstExpInt(i);          :}

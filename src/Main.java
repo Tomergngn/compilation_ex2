@@ -39,8 +39,7 @@ public class Main
 			/*************************/
 			/* [7] Close output file */
 			/*************************/
-			fileWriter.write("OK");
-			fileWriter.flush();
+			fileWriter.print("OK");
 			fileWriter.close();
 			
 			/*************************************/
