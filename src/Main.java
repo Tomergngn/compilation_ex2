@@ -5,6 +5,7 @@ import ast.*;
 
 public class Main
 {
+	private static final String ERROR_FILE_DATA = "ERROR";
 	static public void main(String argv[])
 	{
 		Lexer l;
@@ -12,30 +13,17 @@ public class Main
 		Symbol s;
 		AstStmtList ast;
 		FileReader fileReader;
-		PrintWriter fileWriter;
+		PrintWriter fileWriter = null;
 		String inputFileName = argv[0];
 		String outputFileName = argv[1];
 		
 		try
 		{
-			/********************************/
-			/* [1] Initialize a file reader */
-			/********************************/
 			fileReader = new FileReader(inputFileName);
-
-			/********************************/
-			/* [2] Initialize a file writer */
-			/********************************/
 			fileWriter = new PrintWriter(outputFileName);
 			
-			/******************************/
-			/* [3] Initialize a new lexer */
-			/******************************/
 			l = new Lexer(fileReader);
 			
-			/*******************************/
-			/* [4] Initialize a new parser */
-			/*******************************/
 			p = new Parser(l);
 
 			/***********************************/
@@ -58,7 +46,25 @@ public class Main
 			/*************************************/
 			AstGraphviz.getInstance().finalizeFile();
     	}
-			     
+        catch (Error e)
+        {
+            if (fileWriter != null) {
+                try {
+                    fileWriter.close();
+                } catch (Exception ex) {
+                    System.err.println("Error closing file writer");
+                }
+            }
+            try {
+                fileWriter = new PrintWriter(outputFileName);
+                fileWriter.println(ERROR_FILE_DATA);
+                fileWriter.close();
+            } catch (Exception ex) {
+                System.err.println("An exception has occured while trying to set ERROR in output file:");
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+        }
 		catch (Exception e)
 		{
 			e.printStackTrace();
