@@ -145,7 +145,6 @@ classDecl	::=		CLASS ID:className LBRACE fieldDeclList:fields RBRACE
 					;
 
 fieldDeclList ::=	fieldDecl:fd fieldDeclList:fdl	{: RESULT = null; :}
-					| fieldDecl:fd					{: RESULT = null; :}
 					|								{: RESULT = null; /* empty */ :}
 					;
 
