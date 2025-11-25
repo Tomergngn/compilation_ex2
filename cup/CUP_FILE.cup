@@ -15,13 +15,7 @@ parser code
 	}
 	public void report_error(String message, Object info)
 	{
-		System.out.print("ERROR >> ");
-		System.out.print("[");
-		System.out.print(lexer.getLine());
-		System.out.print(":");
-		System.out.print(lexer.getTokenStartPosition());
-		System.out.print("] ");
-		System.exit(0);
+		throw new Error("Syntax error at line " + lexer.getLine());
 	}
 :}
 
@@ -93,8 +87,11 @@ terminal String STRING;
 /* NON TERMINALS */
 /*****************/
 non terminal AstNode program;
+non terminal AstNode decl;
+non terminal AstNode declList;
 non terminal AstNode funcDecl;
-non terminal AstNode funcDeclList;
+non terminal AstNode arrayTypeDecl;
+non terminal AstNode classDecl;
 non terminal AstNode type;
 non terminal AstNode paramList;
 non terminal AstNode param;
@@ -107,9 +104,9 @@ non terminal AstStmtList stmtList;
 /***********************/
 /* OPERATOR PRECEDENCE */
 /***********************/
+precedence left LT, GT, EQ;
 precedence left PLUS, MINUS;
 precedence left TIMES, DIVIDE;
-precedence left LT, GT, EQ;
 
 /************************/
 /* START WITH: program */
@@ -120,11 +117,28 @@ start with program;
 /* DERIVATION RULES */
 /********************/
 
-program		::=		funcDeclList:fdl				{: RESULT = fdl; :}
+program		::=		declList:dl						{: RESULT = dl; :}
 					;
 
-funcDeclList ::=	funcDecl:fd funcDeclList:fdl	{: RESULT = fd; /* simplified */ :}
-					| funcDecl:fd					{: RESULT = fd; :}
+declList	::=		decl:d declList:dl				{: RESULT = d; /* simplified */ :}
+					| decl:d						{: RESULT = d; :}
+					;
+
+decl		::=		funcDecl:fd						{: RESULT = fd; :}
+					| arrayTypeDecl:atd				{: RESULT = null; /* skip type decls */ :}
+					| classDecl:cd					{: RESULT = null; /* skip class decls */ :}
+					;
+
+arrayTypeDecl ::= ARRAY ID:typeName EQ TYPE_INT LBRACK RBRACK SEMICOLON
+					{: RESULT = null; /* array type alias int[] */ :}
+					| ARRAY ID:typeName EQ ID:baseType LBRACK RBRACK SEMICOLON
+					{: RESULT = null; /* array type alias custom[] */ :}
+					;
+
+classDecl	::=		CLASS ID:className LBRACE stmtList:body RBRACE
+					{: RESULT = null; /* simplified */ :}
+					| CLASS ID:className EXTENDS ID:parentName LBRACE stmtList:body RBRACE
+					{: RESULT = null; /* simplified */ :}
 					;
 
 funcDecl	::=		type:t ID:name LPAREN paramList:pl RPAREN LBRACE stmtList:body RBRACE
@@ -137,6 +151,8 @@ type		::=		TYPE_INT					{: RESULT = null; :}
 					| TYPE_STRING				{: RESULT = null; :}
 					| TYPE_VOID					{: RESULT = null; :}
 					| ID:className				{: RESULT = null; :}
+					| TYPE_INT LBRACK RBRACK	{: RESULT = null; /* int[] */ :}
+					| ID:typeName LBRACK RBRACK	{: RESULT = null; /* custom type array */ :}
 					;
 
 paramList	::=		param:p COMMA paramList:pl	{: RESULT = null; :}
@@ -147,7 +163,6 @@ param		::=		type:t ID:name				{: RESULT = null; :}
 					;
 
 stmtList	::=		stmt:s	stmtList:l			{: RESULT = new AstStmtList(s,l);    :}
-					| stmt:s					{: RESULT = new AstStmtList(s,null); :}
 					|							{: RESULT = null; /* empty */ :}
 					;
 
@@ -183,7 +198,10 @@ expList		::=		exp:e COMMA expList:el		{: RESULT = null; :}
 					;
 
 exp			::=		INT:i								{: RESULT = new AstExpInt(i);          :}
+					| NIL								{: RESULT = new AstExpInt(0); /* nil placeholder */ :}
+					| STRING:s							{: RESULT = new AstExpInt(0); /* string placeholder */ :}
 					| var:v								{: RESULT = new AstExpVar(v);          :}
+					| MINUS exp:e						{: RESULT = e; /* unary minus - simplified */ :}
 					| exp:e1 PLUS  exp:e2				{: RESULT = new AstExpBinop(e1, e2, 0);:}
 					| exp:e1 MINUS exp:e2				{: RESULT = new AstExpBinop(e1, e2, 1);:}
 					| exp:e1 TIMES exp:e2				{: RESULT = new AstExpBinop(e1, e2, 2);:}
@@ -191,6 +209,12 @@ exp			::=		INT:i								{: RESULT = new AstExpInt(i);          :}
 					| exp:e1 LT exp:e2					{: RESULT = new AstExpBinop(e1, e2, 4);:}
 					| exp:e1 GT exp:e2					{: RESULT = new AstExpBinop(e1, e2, 5);:}
 					| exp:e1 EQ exp:e2					{: RESULT = new AstExpBinop(e1, e2, 6);:}
+					| NEW TYPE_INT LBRACK exp:size RBRACK
+					{: RESULT = new AstExpInt(0); /* new int[] */ :}
+					| NEW ID:typeName LBRACK exp:size RBRACK
+					{: RESULT = new AstExpInt(0); /* new custom[] */ :}
+					| NEW ID:className LPAREN RPAREN
+					{: RESULT = new AstExpInt(0); /* new object */ :}
 					| ID:funcName LPAREN expList:args RPAREN
 					{: RESULT = new AstExpInt(0); /* func call expr placeholder */ :}
 					| ID:funcName LPAREN RPAREN
