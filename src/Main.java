@@ -39,6 +39,7 @@ public class Main
 			/*************************/
 			/* [7] Close output file */
 			/*************************/
+			fileWriter.write("OK");
 			fileWriter.close();
 			
 			/*************************************/
@@ -58,7 +59,8 @@ public class Main
             }
             try {
                 fileWriter = new PrintWriter(outputFileName);
-                fileWriter.println(ERROR_FILE_DATA);
+                int errorLine = (l != null) ? l.getLine() : 1;
+                fileWriter.print(ERROR_FILE_DATA + "(" + errorLine + ")");
 
                 fileWriter.close();
             } catch (Exception ex) {
@@ -72,3 +74,4 @@ public class Main
 			e.printStackTrace();
 		}
 	}
+}

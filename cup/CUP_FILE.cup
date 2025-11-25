@@ -118,6 +118,7 @@ start with program;
 /********************/
 
 program		::=		declList:dl						{: RESULT = dl; :}
+					| stmtList:sl					{: RESULT = sl; /* allow bare statements */ :}
 					;
 
 declList	::=		decl:d declList:dl				{: RESULT = d; /* simplified */ :}

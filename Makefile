@@ -113,6 +113,7 @@ all:
 	@echo "*                                                         *"
 	@echo "***********************************************************"
 	jar cfm PARSER ${MANIFEST_FILE} -C ${BIN_DIR} .
+	chmod +x PARSER
 
 debug: all
 	@echo "\n"
