@@ -173,7 +173,7 @@ param		::=		type:t ID:name				{: RESULT = null; :}
 					;
 
 stmtList	::=		stmt:s	stmtList:l			{: RESULT = new AstStmtList(s,l);    :}
-					|							{: RESULT = null; /* empty */ :}
+					|							{: RESULT = new AstStmtList(null, null); /* empty */ :}
 					;
 
 var			::=		ID:name								{: RESULT = new AstVarSimple(name);       :}
