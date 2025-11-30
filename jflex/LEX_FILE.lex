@@ -77,10 +77,9 @@ import java_cup.runtime.*;
 LineTerminator	        = \r|\n|\r\n
 WhiteSpace		        = {LineTerminator} | [ \t]
 INTEGER			        = 0|([1-9][0-9]*)
-INVALID_INTEGER         = 0[0-9a-zA-Z]+
+INVALID_INTEGER         = 0[0-9]+
 ID				        = [a-zA-Z][a-zA-Z0-9]*
 STRING			        = \"[a-zA-Z]*\"
-INVALID_STRING	        = \".*
 COMMENT_ALLOWED_CHAR    = [a-zA-Z0-9 \(\)\[\]\{\}\?\!\+\-\*\/\.;]
 COMMENT_TYPE_1          = \/\/{COMMENT_ALLOWED_CHAR}*
 COMMENT_TYPE_2          = \/\*{COMMENT_ALLOWED_CHAR}*\*\/
@@ -155,6 +154,5 @@ INVALID_COMMENT         = ((\/\*) | (\/\/)).*
                         String text = yytext();
                         return symbol(TokenNames.STRING, String.valueOf(text).substring(1,text.length()-1));
                     }
-{INVALID_STRING}    { throw new Error("Invalid String: " + yytext());}
 {ID}				{ return symbol(TokenNames.ID, yytext());}
 }
