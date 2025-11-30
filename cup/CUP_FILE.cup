@@ -119,11 +119,11 @@ start with program;
 /* DERIVATION RULES */
 /********************/
 
-program		::=		declList:dl						{: RESULT = dl; :}
+program		::=		declList:dl						{: RESULT = (dl != null) ? dl : new AstStmtList(null, null); :}
 					| stmtList:sl					{: RESULT = sl; /* allow bare statements */ :}
 					;
 
-declList	::=		decl:d declList:dl				{: RESULT = d; /* simplified */ :}
+declList	::=		decl:d declList:dl				{: RESULT = (d != null) ? d : dl; :}
 					| decl:d						{: RESULT = d; :}
 					;
 
