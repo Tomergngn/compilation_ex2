@@ -5,15 +5,15 @@
 /*************/
 /* USER CODE */
 /*************/
-
+   
 import java_cup.runtime.*;
 
 /******************************/
 /* DOLLAR DOLLAR - DON'T TOUCH! */
 /******************************/
-
+      
 %%
-
+   
 /************************************/
 /* OPTIONS AND DECLARATIONS SECTION */
 /************************************/
@@ -30,7 +30,7 @@ import java_cup.runtime.*;
 /********************************************************************/
 %line
 %column
-
+    
 /*******************************************************************************/
 /* Note that this has to be the EXACT same name of the class the CUP generates */
 /*******************************************************************************/
@@ -40,7 +40,7 @@ import java_cup.runtime.*;
 /* CUP compatibility mode interfaces with a CUP generated parser. */
 /******************************************************************/
 %cup
-
+   
 /****************/
 /* DECLARATIONS */
 /****************/
@@ -57,7 +57,7 @@ import java_cup.runtime.*;
 	private Symbol symbol(int type)               {return new Symbol(type, yyline, yycolumn);}
 	private Symbol symbol(int type, Object value) {return new Symbol(type, yyline, yycolumn, value);}
 	private static final int MAX_INTEGER_VALUE = 32767;
-	private static final int MIN_INTEGER_VALUE = 0;
+	private static final int MIN_INTEGER_VALUE = -32767;
 
 	/*******************************************/
 	/* Enable line number extraction from main */
@@ -77,15 +77,15 @@ import java_cup.runtime.*;
 LineTerminator	        = \r|\n|\r\n
 WhiteSpace		        = {LineTerminator} | [ \t]
 INTEGER			        = 0|([1-9][0-9]*)
-INVALID_INTEGER         = 0[0-9]+
+INVALID_INTEGER         = 0[0-9a-zA-Z]+
 ID				        = [a-zA-Z][a-zA-Z0-9]*
 STRING			        = \"[a-zA-Z]*\"
 INVALID_STRING	        = \".*
-COMMENT_ALLOWED_CHAR    = [a-zA-Z0-9 \t\(\)\[\]\{\}\?\!\+\-\*\/\.;]
+COMMENT_ALLOWED_CHAR    = [a-zA-Z0-9 \(\)\[\]\{\}\?\!\+\-\*\/\.;]
 COMMENT_TYPE_1          = \/\/{COMMENT_ALLOWED_CHAR}*
-COMMENT_TYPE_2          = \/\*({COMMENT_ALLOWED_CHAR}|\n)*\*\/
+COMMENT_TYPE_2          = \/\*{COMMENT_ALLOWED_CHAR}*\*\/
 INVALID_COMMENT         = ((\/\*) | (\/\/)).*
-
+   
 /******************************/
 /* DOLLAR DOLLAR - DON'T TOUCH! */
 /******************************/
@@ -95,7 +95,7 @@ INVALID_COMMENT         = ((\/\*) | (\/\/)).*
 /************************************************************/
 /* LEXER matches regular expressions to actions (Java code) */
 /************************************************************/
-
+   
 /**************************************************************/
 /* YYINITIAL is the state at which the lexer begins scanning. */
 /* So these regular expressions will only be matched if the   */
@@ -106,10 +106,14 @@ INVALID_COMMENT         = ((\/\*) | (\/\/)).*
 {COMMENT_TYPE_1}    { /* Skip */ }
 {COMMENT_TYPE_2}    { /* Skip */ }
 {INVALID_COMMENT}   { throw new Error("Invalid comment: " + yytext()); }
+"if"				{ return symbol(TokenNames.IF);}
+"="					{ return symbol(TokenNames.EQ);}
+"."					{ return symbol(TokenNames.DOT);}
 "+"					{ return symbol(TokenNames.PLUS);}
 "-"					{ return symbol(TokenNames.MINUS);}
-"*"			        { return symbol(TokenNames.TIMES);}
+"*"					{ return symbol(TokenNames.TIMES);}
 "/"					{ return symbol(TokenNames.DIVIDE);}
+":="				{ return symbol(TokenNames.ASSIGN);}
 "("					{ return symbol(TokenNames.LPAREN);}
 ")"					{ return symbol(TokenNames.RPAREN);}
 "["					{ return symbol(TokenNames.LBRACK);}
@@ -119,6 +123,9 @@ INVALID_COMMENT         = ((\/\*) | (\/\/)).*
 ","					{ return symbol(TokenNames.COMMA);}
 "."					{ return symbol(TokenNames.DOT);}
 ";"					{ return symbol(TokenNames.SEMICOLON);}
+{WhiteSpace}		{ /* just skip what was found, do nothing */ }
+{LineTerminator}	{ /* just skip what was found, do nothing */ }
+<<EOF>>				{ return symbol(TokenNames.EOF);}
 "int"				{ return symbol(TokenNames.TYPE_INT);}
 "string"			{ return symbol(TokenNames.TYPE_STRING);}
 "void"				{ return symbol(TokenNames.TYPE_VOID);}
@@ -142,13 +149,12 @@ INVALID_COMMENT         = ((\/\*) | (\/\/)).*
                         {
                             throw new Error("Integer out of bounds: " + yytext());
                         }
-                        return symbol(TokenNames.INT, value);
+                        return symbol(TokenNames.INT, Integer.valueOf(yytext()));
                     }
 {STRING}			{
                         String text = yytext();
                         return symbol(TokenNames.STRING, String.valueOf(text).substring(1,text.length()-1));
                     }
+{INVALID_STRING}    { throw new Error("Invalid String: " + yytext());}
 {ID}				{ return symbol(TokenNames.ID, yytext());}
-{WhiteSpace}		{ /* just skip what was found, do nothing */ }
-<<EOF>>				{ return symbol(TokenNames.EOF);}
 }
