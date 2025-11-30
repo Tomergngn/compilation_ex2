@@ -124,7 +124,7 @@ program		::=		declList:dl						{: RESULT = (dl != null) ? dl : new AstStmtList(n
 					;
 
 declList	::=		decl:d declList:dl				{: RESULT = (d != null) ? d : dl; :}
-					| decl:d						{: RESULT = d; :}
+					| decl:d						{: RESULT = (d != null) ? d : new AstStmtList(null, null); :}
 					;
 
 decl		::=		funcDecl:fd						{: RESULT = fd; :}
